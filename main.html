@@ -1,0 +1,47 @@
+function speakWord(word, element) {
+    if (!soundEnabled) return;
+    
+    // 清理单词（移除标点符号）
+    const cleanWord = word.replace(/[,\.]/g, '').trim();
+    if (!cleanWord || /[\u4e00-\u9fa5]/.test(cleanWord) || cleanWord.startsWith('/')) return;
+
+    // 立即停止当前播放
+    if (isSpeaking) {
+        synth.cancel();
+    }
+
+    // 添加视觉反馈
+    if (element) {
+        element.classList.add('speaking');
+        setTimeout(() => element.classList.remove('speaking'), 500);
+    }
+
+    // 检查 Web Speech API 支持
+    if (synth && voices.length > 0) {
+        isSpeaking = true;
+        const utterance = new SpeechSynthesisUtterance(cleanWord);
+        
+        // 选择英语语音
+        const enVoice = voices.find(voice => voice.lang.startsWith('en-US')) || 
+                       voices.find(voice => voice.lang.startsWith('en')) ||
+                       voices[0];
+        
+        if (enVoice) {
+            utterance.voice = enVoice;
+        }
+        
+        utterance.rate = 0.8;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+        
+        utterance.onend = () => {
+            isSpeaking = false;
+        };
+        
+        utterance.onerror = () => {
+            isSpeaking = false;
+        };
+        
+        synth.speak(utterance);
+    }
+}
